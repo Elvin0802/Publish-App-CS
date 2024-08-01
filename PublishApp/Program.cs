@@ -1,105 +1,82 @@
-﻿using System.Text.Json;
-
-namespace PublishApp;
+﻿namespace PublishApp;
 
 public class Program
 {
 	static void Main(string[] args)
-	{/*
-		Console.WriteLine("This App Publishing on GitHub.com");
-		Thread.Sleep(100);
+	{
 
-		var u = new UpdateService();
+		var uc = new UpdateService();
 
-		Console.WriteLine("CheckForUpdatesAsync Result : ");
-		var rt = u.CheckForUpdatesAsync().Result;
+		Console.WriteLine();
+		Console.WriteLine();
+		Console.WriteLine(uc.CheckForUpdatesAsync(uc.UpdateUrl, @"1.0"));
+		Console.WriteLine();
+		Console.WriteLine();
 
-		bool ki = false;
-
-		if (rt)
-			ki = u.DownloadAndInstallUpdateAsync().Result;
-
-        Console.WriteLine();
-        Console.WriteLine("Last Result : ");
-        Console.WriteLine(ki);
-        Console.WriteLine();
-
-        Console.WriteLine("");
-		Thread.Sleep(100);
-		*/
-		var ttttt = 
-			@"https://github.com/Elvin0802/Publish-App-CS/blob/master/PublishApp/appversion.txt";
-
-
-		using var client = new HttpClient();
-		var response = client.GetStringAsync(ttttt);
-
-		var tpl = response.Result.Split('{','}');
-     
-		foreach (var item in tpl)
-        {
-			Console.WriteLine();
-			Console.WriteLine("Result : ");
-			Console.WriteLine();
-            Console.WriteLine(item);
-            Console.WriteLine();
-			Console.WriteLine();
-		}
-
-
-
-    }
+	}
 }
 
 public class UpdateService
 {
-	private const string UpdateUrl =
-			@"";
+	public string UpdateUrl =
+			@"https://github.com/Elvin0802/Publish-App-CS/blob/master/PublishApp/appversion.txt";
 
-	public async Task<bool> CheckForUpdatesAsync()
+	public async Task<string> CheckForUpdatesAsync(string? dUrl, string? curVer)
 	{
 		try
 		{
 			using var client = new HttpClient();
-			var response = await client.GetStringAsync(UpdateUrl);
-			var latestVersion = ParseVersionFromJson(response);
+
+			Version? vLast = null;
+			string? filePath =
+				DownloadAndInstallUpdateAsync(dUrl, @"D:/Games", @"appversion.txt")
+				.Result;
+
+			if (string.IsNullOrEmpty(filePath))
+			{
+				vLast = ParseVersionFromTxt(filePath);
+			}
 
 			//   Compare latestVersion with your app's current version
-			var currentVersion = new Version(1, 0, 1);
 
-			var ttt = JsonSerializer.Serialize<Version>(currentVersion);
+			var currentVersion = new Version(curVer);
 
-			File.WriteAllText("testv.json", ttt);
+			//var currentVersion = new Version("1.0");
 
-			Console.WriteLine();
-			Console.WriteLine("Currrent Version : ");
-			Console.WriteLine(ttt);
-			Console.WriteLine();
-			Console.WriteLine("Latest Version : ");
-			Console.WriteLine(latestVersion);
-			Console.WriteLine();
-
-
-			return latestVersion > currentVersion;
+			if (vLast > currentVersion)
+				return "Update Aviable.";
+			else
+				return "Update Not Aviable.";
 		}
 		catch (Exception ex)
 		{
 			// Handle exceptions (e.g., network errors)
+
 			Console.WriteLine($"Error checking for updates: {ex.Message}");
-			return false;
+
+			return "Update Not Aviable.";
 		}
 	}
 
-	public async Task<bool> DownloadAndInstallUpdateAsync()
+	public async Task<string> DownloadAndInstallUpdateAsync(string? cUrl, string? path, string? pName)
 	{
 		try
 		{
 			using var client = new HttpClient();
-			var updatePackageBytes = await client.GetByteArrayAsync(
-					@"https://github.com/Elvin0802/Publish-App-CS/releases/download/v1.0/net8.rar");
+
+			var updatePackageBytes = await client.GetByteArrayAsync(cUrl);
+
+			//@"https://github.com/Elvin0802/Publish-App-CS/releases/download/v1.0/net8.rar");
 
 			// Save the update package to a temporary location
-			var tempPath = Path.Combine("D:/Games", "net8.rar");
+
+			var tempPath = Path.Combine(path, pName);
+
+			Console.WriteLine($"\n\tLast path : {tempPath}\n");
+
+			//var tempPath = Path.Combine("D:/Games", "net8.rar");
+
+
 			File.WriteAllBytes(tempPath, updatePackageBytes);
 
 			// Install the update (platform-specific code required)
@@ -112,34 +89,25 @@ public class UpdateService
 
 			// Clean up the temporary file
 			//File.Delete(tempPath);
-			return true;
+
+			return tempPath;
 		}
 		catch (Exception ex)
 		{
 			Console.WriteLine($"Error downloading/installing update: {ex.Message}");
-			return false;
+
+			return @"D:\Games";
 		}
 	}
 
-	private Version? ParseVersionFromJson(string? json)
+	private Version? ParseVersionFromTxt(string? txtPath)
 	{
-		// Parse the JSON response to extract the version
-		// Example: { "version": "2.0.1" }
-		// Implement your own logic here
-		// For simplicity, assume the version is a string
-		//Console.WriteLine();
-		//Console.WriteLine("json in web url : ");
-		//Console.WriteLine(json);
-		//Console.WriteLine();
+		var vText = File.ReadAllText(txtPath); // Version Text.
 
-		//Thread.Sleep(2000);
+		Console.WriteLine(vText);
 
-		return new Version(1, 0, 1);
+		Thread.Sleep(400);
 
-
-		var oop = JsonSerializer.Deserialize<Version>(json);
-
-		var versionString = "2.0.1"; // Replace with actual parsing
-		return new Version(versionString);
+		return new Version(vText);
 	}
 }
