@@ -1,35 +1,60 @@
-﻿
-
-using System;
-using System.Text.Json;
-using System.IO;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Microsoft.VisualBasic.FileIO;
+﻿using System.Text.Json;
 
 namespace PublishApp;
 
 public class Program
 {
 	static void Main(string[] args)
-	{
+	{/*
 		Console.WriteLine("This App Publishing on GitHub.com");
-		Thread.Sleep(9000);
+		Thread.Sleep(100);
+
+		var u = new UpdateService();
+
+		Console.WriteLine("CheckForUpdatesAsync Result : ");
+		var rt = u.CheckForUpdatesAsync().Result;
+
+		bool ki = false;
+
+		if (rt)
+			ki = u.DownloadAndInstallUpdateAsync().Result;
+
+        Console.WriteLine();
+        Console.WriteLine("Last Result : ");
+        Console.WriteLine(ki);
+        Console.WriteLine();
+
+        Console.WriteLine("");
+		Thread.Sleep(100);
+		*/
+		var ttttt = 
+			@"https://github.com/Elvin0802/Publish-App-CS/blob/master/PublishApp/appversion.txt";
+
+
+		using var client = new HttpClient();
+		var response = client.GetStringAsync(ttttt);
+
+		var tpl = response.Result.Split('{','}');
+     
+		foreach (var item in tpl)
+        {
+			Console.WriteLine();
+			Console.WriteLine("Result : ");
+			Console.WriteLine();
+            Console.WriteLine(item);
+            Console.WriteLine();
+			Console.WriteLine();
+		}
 
 
 
-
-
-
-
-
-
-	}
+    }
 }
 
 public class UpdateService
 {
-	private const string UpdateUrl = @"https://your-update-server.com/latest-version.json";
+	private const string UpdateUrl =
+			@"";
 
 	public async Task<bool> CheckForUpdatesAsync()
 	{
@@ -39,8 +64,22 @@ public class UpdateService
 			var response = await client.GetStringAsync(UpdateUrl);
 			var latestVersion = ParseVersionFromJson(response);
 
-		    //   Compare latestVersion with your app's current version
-		    var currentVersion = new Version(1,0,1);
+			//   Compare latestVersion with your app's current version
+			var currentVersion = new Version(1, 0, 1);
+
+			var ttt = JsonSerializer.Serialize<Version>(currentVersion);
+
+			File.WriteAllText("testv.json", ttt);
+
+			Console.WriteLine();
+			Console.WriteLine("Currrent Version : ");
+			Console.WriteLine(ttt);
+			Console.WriteLine();
+			Console.WriteLine("Latest Version : ");
+			Console.WriteLine(latestVersion);
+			Console.WriteLine();
+
+
 			return latestVersion > currentVersion;
 		}
 		catch (Exception ex)
@@ -56,10 +95,11 @@ public class UpdateService
 		try
 		{
 			using var client = new HttpClient();
-			var updatePackageBytes = await client.GetByteArrayAsync("https://your-update-server.com/MyAppUpdate.msix");
+			var updatePackageBytes = await client.GetByteArrayAsync(
+					@"https://github.com/Elvin0802/Publish-App-CS/releases/download/v1.0/net8.rar");
 
 			// Save the update package to a temporary location
-			var tempPath = Path.Combine("D:/Games", "MyAppUpdate.msix");
+			var tempPath = Path.Combine("D:/Games", "net8.rar");
 			File.WriteAllBytes(tempPath, updatePackageBytes);
 
 			// Install the update (platform-specific code required)
@@ -71,7 +111,7 @@ public class UpdateService
 			// await Windows.ApplicationModel.Package.Current.InstallPackageAsync(packageUri);
 
 			// Clean up the temporary file
-			File.Delete(tempPath);
+			//File.Delete(tempPath);
 			return true;
 		}
 		catch (Exception ex)
@@ -81,12 +121,21 @@ public class UpdateService
 		}
 	}
 
-	private Version ParseVersionFromJson(string json)
+	private Version? ParseVersionFromJson(string? json)
 	{
 		// Parse the JSON response to extract the version
 		// Example: { "version": "2.0.1" }
 		// Implement your own logic here
 		// For simplicity, assume the version is a string
+		//Console.WriteLine();
+		//Console.WriteLine("json in web url : ");
+		//Console.WriteLine(json);
+		//Console.WriteLine();
+
+		//Thread.Sleep(2000);
+
+		return new Version(1, 0, 1);
+
 
 		var oop = JsonSerializer.Deserialize<Version>(json);
 
